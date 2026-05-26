@@ -1,39 +1,123 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Ohio Algebra 1 Animation Hub</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ohio Algebra 1: The Top 10</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
-        body { font-family: sans-serif; display: flex; margin: 0; background: #f4f7f6; }
-        .sidebar { width: 250px; background: #2c3e50; color: white; height: 100vh; padding: 20px; overflow-y: auto; }
-        .main { flex: 1; padding: 40px; display: flex; flex-direction: column; align-items: center; }
-        .video-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 800px; width: 100%; }
-        video { width: 100%; border-radius: 8px; }
-        .nav-link { display: block; padding: 10px; color: #bdc3c7; text-decoration: none; border-bottom: 1px solid #34495e; }
-        .nav-link:hover { color: #2ecc71; }
-        h2 { color: #2c3e50; }
+        :root { --accent: #22c55e; --bg: #ffffff; --text: #1e293b; }
+        body { font-family: system-ui, sans-serif; background: #f8fafc; margin: 0; display: flex; height: 100vh; }
+        .sidebar { width: 300px; background: #1e293b; color: white; padding: 20px; overflow-y: auto; }
+        .nav-btn { width: 100%; text-align: left; padding: 12px; margin-bottom: 8px; background: #334155; border: none; color: white; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .nav-btn:hover { background: var(--accent); color: #1e293b; font-weight: bold; }
+        .main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .stage { background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 800px; height: 400px; position: relative; overflow: hidden; }
+        svg { width: 100%; height: 100%; }
+        .controls { margin-top: 30px; }
+        button#play { background: var(--accent); border: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 18px; }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h3>Algebra Skills</h3>
-        <a href="#" class="nav-link" onclick="loadVideo('videos/fraction_buster.mp4', 'Fraction Busting (A.REI.3)')">1. Fraction Busting</a>
-        <a href="#" class="nav-link" onclick="loadVideo('videos/inequality_flip.mp4', 'Inequality Flip (A.REI.3)')">2. Inequality Flip</a>
-        </div>
-    <div class="main">
-        <h2 id="video-title">Select a Skill</h2>
-        <div class="video-container">
-            <video id="video-player" controls loop>
-                <source id="video-source" src="" type="video/mp4">
-            </video>
-        </div>
+
+<div class="sidebar">
+    <h2 style="color: #94a3b8;">Ohio Algebra 1</h2>
+    <div id="menu"></div>
+</div>
+
+<div class="main">
+    <h2 id="topic-title" style="color: #64748b;">Select a Skill</h2>
+    <div class="stage" id="stage">
+        <svg id="svg-canvas" viewBox="0 0 800 400">
+            </svg>
     </div>
-    <script>
-        function loadVideo(path, title) {
-            document.getElementById('video-title').innerText = title;
-            document.getElementById('video-source').src = path;
-            document.getElementById('video-player').load();
-            document.getElementById('video-player').play();
+    <div class="controls">
+        <button id="play" onclick="runCurrentAnimation()">Animate Logic</button>
+    </div>
+</div>
+
+<script>
+const library = {
+    "1. Fraction Buster": {
+        standard: "A.REI.3",
+        setup: () => {
+            return `<text id="x" x="300" y="200" font-size="80">x</text>
+                    <line id="line" x1="280" y1="215" x2="330" y2="215" stroke="black" stroke-width="4"/>
+                    <text id="den" x="305" y="260" font-size="50" fill="red">4</text>
+                    <text id="eq" x="380" y="220" font-size="80">= 5</text>
+                    <text id="buster" x="100" y="100" font-size="60" fill="green" visibility="hidden">(4)</text>`;
+        },
+        animate: (tl) => {
+            tl.set("#buster", {visibility: "visible", opacity: 0, x: 0, y: 0})
+              .to("#buster", {opacity: 1, x: 180, y: 130, duration: 1, ease: "power2.inOut"})
+              .to(["#buster", "#den", "#line"], {opacity: 0, scale: 0, duration: 0.3})
+              .to("#x", {y: 25, duration: 0.4})
+              .set("#buster", {opacity: 1, scale: 1, x: 380, y: 20})
+              .to("#buster", {y: 100, duration: 0.8, ease: "back.out"})
+              .add(() => { document.getElementById("eq").textContent = "= 20"; })
+              .to("#eq", {fill: "green", duration: 0.2}).to("#buster", {opacity: 0});
         }
-    </script>
+    },
+    "2. Inequality Flip": {
+        standard: "A.REI.3",
+        setup: () => {
+            return `<text id="t1" x="300" y="200" font-size="80" text-anchor="middle">-2x</text>
+                    <text id="sign" x="400" y="200" font-size="80" text-anchor="middle">></text>
+                    <text id="t2" x="500" y="200" font-size="80" text-anchor="middle">10</text>`;
+        },
+        animate: (tl) => {
+            tl.to("#t1", {fill: "red", scale: 1.1, duration: 0.5})
+              .to("#sign", {rotation: 180, transformOrigin: "center", fill: "red", duration: 0.8, ease: "back.inOut",
+                  onStart: () => { setTimeout(() => { document.getElementById("sign").textContent = "<"; }, 400); }
+              })
+              .add(() => { 
+                document.getElementById("t1").textContent = "x";
+                document.getElementById("t2").textContent = "-5";
+              })
+              .to(["#t1", "#t2", "#sign"], {fill: "black", scale: 1, duration: 0.5});
+        }
+    },
+    "3. Distributive Rainbow": {
+        standard: "A.SSE.1",
+        setup: () => {
+            return `<text id="m" x="200" y="200" font-size="80">3</text>
+                    <text id="p" x="250" y="200" font-size="80">(x + 4)</text>
+                    <path id="arc1" d="M 215 140 Q 250 80 300 140" fill="none" stroke="green" stroke-width="4" visibility="hidden"/>
+                    <path id="arc2" d="M 215 140 Q 320 40 420 140" fill="none" stroke="green" stroke-width="4" visibility="hidden"/>`;
+        },
+        animate: (tl) => {
+            tl.set(["#arc1", "#arc2"], {strokeDasharray: 200, strokeDashoffset: 200, visibility: "visible"})
+              .to("#arc1", {strokeDashoffset: 0, duration: 0.6})
+              .to("#arc2", {strokeDashoffset: 0, duration: 0.6}, "-=0.3")
+              .add(() => { document.getElementById("stage").innerHTML = "<div style='font-size:80px; font-weight:bold;'>3x + 12</div>"; });
+        }
+    }
+    // ... add 7 more here following the same pattern
+};
+
+let currentKey = null;
+const menu = document.getElementById("menu");
+const canvas = document.getElementById("svg-canvas");
+
+Object.keys(library).forEach(key => {
+    const btn = document.createElement("button");
+    btn.className = "nav-btn";
+    btn.innerText = key;
+    btn.onclick = () => loadTopic(key);
+    menu.appendChild(btn);
+});
+
+function loadTopic(key) {
+    currentKey = key;
+    document.getElementById("topic-title").innerText = key + " (" + library[key].standard + ")";
+    canvas.innerHTML = library[key].setup();
+}
+
+function runCurrentAnimation() {
+    if (!currentKey) return;
+    const tl = gsap.timeline();
+    library[currentKey].animate(tl);
+}
+</script>
 </body>
 </html>
