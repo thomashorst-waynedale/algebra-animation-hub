@@ -2,152 +2,121 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accessible Algebra Hub</title>
+    <title>Kinetic Algebra Hub</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
-        :root { --primary: #166534; --accent: #22c55e; --error: #b91c1c; --text: #0f172a; }
-        body { font-family: -apple-system, sans-serif; background: #f1f5f9; margin: 0; display: flex; height: 100vh; color: var(--text); }
-        .sidebar { width: 320px; background: #1e293b; color: white; padding: 20px; overflow-y: auto; }
-        .nav-btn { width: 100%; text-align: left; padding: 14px; margin-bottom: 10px; background: #334155; border: 2px solid transparent; color: white; border-radius: 8px; cursor: pointer; font-size: 1rem; }
-        .nav-btn:hover, .nav-btn:focus { border-color: var(--accent); background: #475569; outline: none; }
-        .main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .stage { background: white; border: 4px solid #e2e8f0; border-radius: 16px; width: 100%; max-width: 800px; height: 450px; position: relative; }
-        svg { width: 100%; height: 100%; }
-        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
-        .controls { margin-top: 25px; display: flex; gap: 20px; align-items: center; }
-        button#play { background: var(--primary); color: white; border: none; padding: 16px 45px; border-radius: 50px; font-weight: 700; cursor: pointer; font-size: 1.2rem; }
-        button#play:active { transform: scale(0.98); }
-        #live-status { font-weight: 600; color: #64748b; }
+        :root { --ink: #1e293b; --action: #2563eb; --delete: #ef4444; }
+        body { font-family: 'Comic Sans MS', cursive, sans-serif; background: #fdfdfd; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Dashboard Styling */
+        .sidebar { width: 260px; background: #f1f5f9; border-right: 3px solid #cbd5e1; padding: 20px; z-index: 10; }
+        .nav-btn { width: 100%; text-align: left; padding: 12px; margin-bottom: 10px; background: white; border: 2px solid #cbd5e1; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .nav-btn:hover { transform: translateX(5px); border-color: var(--action); color: var(--action); }
+        
+        /* The "Whiteboard" Stage */
+        .main { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #canvas { width: 90%; height: 60%; background: white; border: 2px solid #e2e8f0; border-radius: 4px; box-shadow: inset 0 0 50px rgba(0,0,0,0.02); }
+        
+        .controls { margin-top: 30px; display: flex; align-items: center; gap: 20px; }
+        button#play { background: var(--action); color: white; border: none; padding: 15px 40px; border-radius: 8px; font-size: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #1d4ed8; }
+        button#play:active { transform: translateY(4px); box-shadow: none; }
+        #status { color: #64748b; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="sidebar" role="navigation" aria-label="Math Topics">
-    <h2 style="color: #94a3b8; font-size: 1.2rem;">Ohio Standards Library</h2>
+<nav class="sidebar">
+    <h2 style="margin-top: 0;">Skill List</h2>
     <div id="menu"></div>
-</div>
+</nav>
 
 <main class="main">
-    <div id="standard-info" style="color: #64748b; margin-bottom: 10px; font-weight: bold;">Select a topic to begin</div>
-    <div class="stage" role="img" id="stage-container">
-        <svg id="canvas" viewBox="0 0 800 450"></svg>
-    </div>
-    
+    <div id="status" aria-live="polite">Choose a skill to start...</div>
+    <svg id="canvas" viewBox="0 0 800 400">
+        </svg>
     <div class="controls">
-        <button id="play" onclick="runAnimation()">▶ Run Animation</button>
-        <div id="live-status" aria-live="polite">Waiting for selection...</div>
+        <button id="play" onclick="runLogic()">Animate Steps</button>
     </div>
 </main>
 
 <script>
 const library = {
-    "1. Fraction Buster": {
-        std: "A.REI.3", status: "Multiplying all terms by 4 to clear the denominator.",
-        setup: () => `<text x="400" y="225" font-size="80" text-anchor="middle" id="eq">x/4 + 3 = 5</text>`,
+    "Fraction Buster": {
+        setup: () => `
+            <g id="term1">
+                <text x="200" y="180" font-size="80" text-anchor="middle">x</text>
+                <line x1="170" y1="200" x2="230" y2="200" stroke="black" stroke-width="4" id="bar"/>
+                <text x="200" y="260" font-size="60" text-anchor="middle" fill="red" id="den">4</text>
+            </g>
+            <text x="280" y="210" font-size="80" id="plus">+</text>
+            <text x="360" y="210" font-size="80" text-anchor="middle" id="term2">3</text>
+            <text x="450" y="210" font-size="80">=</text>
+            <text x="540" y="210" font-size="80" text-anchor="middle" id="term3">5</text>
+            <text id="buster" x="-100" y="100" font-size="60" fill="blue" font-weight="bold">(4)</text>
+        `,
         anim: (tl) => {
-            tl.to("#eq", {textContent: "(4)x/4 + (4)3 = (4)5", fill: "green", duration: 1})
-              .to("#eq", {textContent: "x + 12 = 20", fill: "black", delay: 1});
+            tl.set("#buster", {x: 50, y: 50, opacity: 1})
+              // Jump to Denominator
+              .to("#buster", {x: 180, y: 220, duration: 0.8, ease: "back.inOut(1.7)"})
+              .to("#den, #bar, #buster", {scale: 0, opacity: 0, duration: 0.3, stagger: 0.1})
+              .to("#term1", {y: 30, duration: 0.5, ease: "bounce.out"})
+              
+              // Jump to 3
+              .set("#buster", {x: 360, y: 50, scale: 1, opacity: 1})
+              .to("#buster", {y: 150, duration: 0.6, ease: "power2.in"})
+              .to("#term2", {scale: 1.3, fill: "blue", duration: 0.1}) // Impact
+              .add(() => { document.getElementById("term2").textContent = "12"; })
+              .to("#term2", {scale: 1, duration: 0.3})
+              .to("#buster", {opacity: 0, duration: 0.2})
+
+              // Jump to 5
+              .set("#buster", {x: 540, y: 50, scale: 1, opacity: 1})
+              .to("#buster", {y: 150, duration: 0.6, ease: "power2.in"})
+              .to("#term3", {scale: 1.3, fill: "blue", duration: 0.1})
+              .add(() => { document.getElementById("term3").textContent = "20"; })
+              .to("#term3", {scale: 1, duration: 0.3})
+              .to("#buster", {opacity: 0, duration: 0.2});
         }
     },
-    "2. Inequality Flip": {
-        std: "A.REI.3", status: "Dividing by negative 2. The sign flips directions.",
-        setup: () => `<text x="400" y="225" font-size="80" text-anchor="middle" id="eq">-2x > 10</text>`,
+    "The Sign Flip": {
+        setup: () => `
+            <text x="200" y="200" font-size="80" id="neg">-2</text>
+            <text x="280" y="200" font-size="80" id="x">x</text>
+            <text x="380" y="200" font-size="80" id="sign" text-anchor="middle">></text>
+            <text x="500" y="200" font-size="80" id="num">10</text>
+        `,
         anim: (tl) => {
-            tl.to("#eq", {textContent: "x  ?  -5", fill: "red", duration: 1})
-              .to("#eq", {textContent: "x < -5", fill: "black", duration: 0.5});
-        }
-    },
-    "3. Distributive Law": {
-        std: "A.SSE.1", status: "3 is multiplying every term inside the parentheses.",
-        setup: () => `<text x="400" y="225" font-size="80" text-anchor="middle" id="eq">3(x + 4)</text>`,
-        anim: (tl) => {
-            tl.to("#eq", {textContent: "3·x + 3·4", fill: "green", duration: 1})
-              .to("#eq", {textContent: "3x + 12", fill: "black", delay: 0.5});
-        }
-    },
-    "4. Combining Like Terms": {
-        std: "A.APR.1", status: "Grouping terms with the same variable.",
-        setup: () => `<text x="400" y="225" font-size="80" text-anchor="middle" id="eq">3x + 5 + 2x</text>`,
-        anim: (tl) => {
-            tl.to("#eq", {textContent: "3x + 2x + 5", duration: 1})
-              .to("#eq", {textContent: "5x + 5", fill: "green", duration: 1});
-        }
-    },
-    "5. Zero Pairs": {
-        std: "A.REI.3", status: "Moving 5 across the equals sign changes its sign.",
-        setup: () => `<text x="400" y="225" font-size="80" text-anchor="middle" id="eq">x + 5 = 12</text>`,
-        anim: (tl) => {
-            tl.to("#eq", {textContent: "x = 12 - 5", duration: 1})
-              .to("#eq", {textContent: "x = 7", fill: "green", duration: 0.5});
-        }
-    },
-    "6. Zero Exponents": {
-        std: "8.EE.1", status: "Any non-zero number raised to the zero power is 1.",
-        setup: () => `<text x="400" y="225" font-size="100" text-anchor="middle" id="eq">x⁰</text>`,
-        anim: (tl) => {
-            tl.to("#eq", {scale: 1.5, fill: "orange", duration: 0.5})
-              .to("#eq", {textContent: "1", scale: 1, fill: "black", duration: 0.5});
-        }
-    },
-    "7. Vertical Line Test": {
-        std: "F.IF.1", status: "A vertical line scans the graph to check for a function.",
-        setup: () => `<path d="M 200 300 Q 400 100 600 300" stroke="black" fill="none" stroke-width="5"/>
-                      <line id="v-line" x1="100" y1="50" x2="100" y2="400" stroke="red" stroke-width="4"/>`,
-        anim: (tl) => {
-            tl.to("#v-line", {x1: 700, x2: 700, duration: 2, ease: "none"});
-        }
-    },
-    "8. Factoring GCF": {
-        std: "A.SSE.2", status: "Pulling the greatest common factor out of the expression.",
-        setup: () => `<text x="400" y="225" font-size="80" text-anchor="middle" id="eq">6x + 9</text>`,
-        anim: (tl) => {
-            tl.to("#eq", {textContent: "3(2x) + 3(3)", duration: 1})
-              .to("#eq", {textContent: "3(2x + 3)", fill: "green", duration: 1});
-        }
-    },
-    "9. Slope Rise/Run": {
-        std: "F.IF.6", status: "Slope is the change in y over the change in x.",
-        setup: () => `<line x1="200" y1="350" x2="600" y2="150" stroke="#ccc" stroke-width="2"/>
-                      <circle id="pt" cx="200" cy="350" r="10" fill="blue"/>`,
-        anim: (tl) => {
-            tl.to("#pt", {cy: 150, duration: 1}) // Rise
-              .to("#pt", {cx: 600, duration: 1}); // Run
-        }
-    },
-    "10. Scientific Notation": {
-        std: "8.EE.3", status: "Moving the decimal to create a number between 1 and 10.",
-        setup: () => `<text x="400" y="225" font-size="80" text-anchor="middle" id="eq">45000</text>`,
-        anim: (tl) => {
-            tl.to("#eq", {textContent: "4.5 x 10⁴", duration: 1.5, ease: "bounce.out"});
+            tl.to("#neg", {y: -100, opacity: 0, duration: 0.6, ease: "back.in"})
+              .to("#sign", {rotation: 180, transformOrigin: "center", fill: "red", duration: 0.7, ease: "elastic.out(1, 0.3)"})
+              .add(() => { document.getElementById("sign").textContent = "<"; })
+              .to("#num", {textContent: "-5", fill: "blue", scale: 1.2, duration: 0.4})
+              .to("#num", {scale: 1, duration: 0.2});
         }
     }
 };
 
-let currentKey = null;
+let current = null;
+const menu = document.getElementById("menu");
 const canvas = document.getElementById("canvas");
-const status = document.getElementById("live-status");
 
-// Build Menu
 Object.keys(library).forEach(key => {
-    const btn = document.createElement("button");
-    btn.className = "nav-btn";
-    btn.innerText = key;
-    btn.onclick = () => {
-        currentKey = key;
+    const b = document.createElement("button");
+    b.className = "nav-btn";
+    b.innerText = key;
+    b.onclick = () => {
+        current = key;
         canvas.innerHTML = library[key].setup();
-        document.getElementById("standard-info").innerText = "Standard: " + library[key].std;
-        status.innerText = "Ready to animate: " + key;
+        document.getElementById("status").innerText = "Ready: " + key;
     };
-    document.getElementById("menu").appendChild(btn);
+    menu.appendChild(b);
 });
 
-function runAnimation() {
-    if (!currentKey) return;
+function runLogic() {
+    if (!current) return;
     const tl = gsap.timeline();
-    status.innerText = library[currentKey].status;
-    library[currentKey].anim(tl);
+    library[current].anim(tl);
 }
 </script>
+
 </body>
 </html>
